@@ -1,0 +1,155 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+@section Estilos
+{
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-box {
+            height: 400px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 10px;
+        }
+
+            .message.user {
+                text-align: right;
+            }
+
+            .message.bot {
+                text-align: left;
+            }
+
+            .message.error {
+                text-align: left;
+            }
+
+            .message p {
+                display: inline-block;
+                padding: 10px;
+                border-radius: 5px;
+                background-color: #e0e0e0;
+                margin: 0;
+            }
+
+            .message.user p {
+                background-color: #d1e7dd;
+            }
+
+            .message.bot p {
+                background-color: #a0d0f5;
+            }
+
+            .message.error p {
+                background-color: #f8d7da;
+            }
+
+        .chat-form {
+            margin-top: 20px;
+        }
+
+            .chat-form input[type="text"] {
+                width: calc(100% - 100px);
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
+
+            .chat-form input[type="submit"] {
+                width: 80px;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                background-color: #007bff;
+                color: #fff;
+                cursor: pointer;
+            }
+    </style>
+
+}
+
+
+
+<div class="chat-container">
+    <div class="chat-box" id="chat-box">
+        <!-- Los mensajes se agregarán aquí -->
+    </div>
+    <form class="chat-form" id="chat-form" method="post" role="form" asp-antiforgery="true">
+        <input type="text" id="messageinput" name="messageinput" placeholder="Escribe tu mensaje..." required>
+        <input type="submit" value="Enviar">
+    </form>
+</div>
+
+@section Scripts
+{
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('messageinput');
+
+        chatForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const userMessage = messageInput.value;
+            addMessage(userMessage, 'user');
+            messageInput.value = '';
+
+        $.post("/Home/construyeresp", {  messageinput : userMessage  }, function (data) {
+                console.log(data);
+                ResultadoRespuesta( data);
+        }).fail(function () {
+            alert("algo falló");
+        }).always(function () {
+            console.log("terminé")
+        });;
+
+
+        });
+
+        function addMessage(message, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender);
+            const messageContent = document.createElement('p');
+            messageContent.textContent = message;
+            messageElement.appendChild(messageContent);
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function ResultadoRespuesta( data)
+        {
+            var _resp = JSON.parse(data);
+            if (_resp.Resultado != 0) {
+                const errorMessage = _resp.MensajeError;
+                addMessage(errorMessage, 'error');
+                return;
+            }
+            const botMessage = _resp.Respuesta;
+            addMessage(botMessage, 'bot');
+        }
+
+
+    </script>
+
+}
